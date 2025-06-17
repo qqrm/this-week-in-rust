@@ -211,3 +211,15 @@ variable to `True`.
   ```
 * View the email newsletter formatting of specific posts at
   http://localhost:8000/blog/{YEAR}/{MONTH}/{DAY}/{ISSUE}/
+
+## Workflow Secrets
+
+The daily synchronization workflow requires the following repository secrets:
+
+- `TELEGRAM_BOT_TOKEN` – token of the bot used to send Telegram messages.
+- `TELEGRAM_CHAT_ID` – ID of the chat that should receive updates.
+
+The workflow sends the newest post through `tools/send_telegram.py`,
+which converts Markdown to HTML and uses Telegram's `parse_mode=HTML` for
+correct formatting.
+

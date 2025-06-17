@@ -1,0 +1,41 @@
+name: Daily sync
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Update from upstream
+        run: |
+          git remote add upstream https://github.com/rust-lang/this-week-in-rust.git
+          git fetch upstream
+          git merge --ff-only upstream/main
+
+      - name: Push changes
+        run: |
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main
+
+      - name: Install Python dependencies
+        uses: py-actions/py-dependency-install@9c419aa98bfb42280bdae2b0a736befd9b01e3b1 # v4
+        with:
+          path: "tools/requirements.txt"
+          update-pip: "false"
+          update-setuptools: "false"
+          update-wheel: "false"
+
+      - name: Send latest post to Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          latest_post=$(ls content/*-this-week-in-rust*.md | sort | tail -n1)
+          python3 tools/send_telegram.py "$latest_post"
+
